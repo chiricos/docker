@@ -1,0 +1,10 @@
+version: '3'
+services: 
+  web:
+    image: nginx:alpine
+    mem_limit: 20m
+    cpuset: "0"
+    container_name: nginx
+    ports:
+      - "8080:80"
+    

@@ -1,0 +1,30 @@
+FROM
+RUN
+COPY/ADD
+ENV
+WORKDIR
+EXPOSE
+LABEL
+USER
+VOLUME
+CMD
+
+FROM centos:7
+
+LABEL version=1.0
+LABEL description="this is my image"
+LABEL vendor="edward diaz"
+
+RUN yum install httpd -y
+
+WORKDIR /var/www/html
+
+COPY template .
+
+ENV contenido prueba
+
+RUN echo "$contenido" > /var/www/html/prueba.html
+
+EXPOSE 8080
+
+CMD apachectl -DFOREGROUND

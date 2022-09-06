@@ -1,0 +1,11 @@
+version: '3'
+services: 
+  web:
+    container_name: nginx
+    ports:
+      - "90:80"
+    volumes: 
+      - /home/drawde/Documents/docker/docker-composer-drawde/volumenes/template:/usr/share/nginx/html
+    image: nginx
+volumes:
+  vol2:

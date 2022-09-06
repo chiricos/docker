@@ -1,0 +1,8 @@
+version: '3'
+services: 
+  test:
+    mem_limit: 20m
+    container_name: test
+    build: .
+    restart: on-failure
+    
