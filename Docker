@@ -1,0 +1,145 @@
+** INSTAL DOCKER **
+
+https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-20-04
+sudo systemctl status docker
+whoami								//saber el usuario de ubuntu
+env								//visualiza variables de entorno de linux
+docker run hello-world
+https://github.com/ricardoandre97/docker-es-resources		// repos de docker para el curso
+docker logs -f nombre_imagen 					// los del CMD
+du -sh * 							//listado archivos con el peso
+docker images -f dangling=true					//mostrar imagenes sin referencia
+docker images -f dangling=true -q | xargs docker rmi		//eliminar imagenes sin referencia
+docker run --help | grep memo					//ayuda de docker run
+docker run --help | grep cpu
+touch file.txt							// crear archivo en linux
+
+
+
+** IMAGENES **
+
+https://hub.docker.com/ 		//repo de imagenes
+docker images 				//ver imagenes
+docker images | grep mongo		//ver imagen especifico
+docker pull mysql			//descarga una imagen
+create file Dockerfile			//crear una imagen propia
+docker build --tag apache-centos .	//crea la imagen proipa
+docker build -t apache .|less		//se ve el peso de la imagen
+docker build -t test -f filedocker .	//crea una imagen con otro nombre del dockerfile
+docker build -t evn .			//imagen con entorno de variables
+docker history -H apache-centos:latest	//historial de una imagen
+ --no-trunc				//se agrega a lo último del historial para que se muestre completo
+ grep "model name" /proc/cpuinfo | wc -l // ver cpus linux
+ 
+docker rmi id_image			//elimina imagen
+
+** CONTENEDORES **
+
+docker ps -a 				//listar contenedores
+docker ps -l				//muestra el último contenedor creado
+docker ps -q 				//lista contenedores solo el id
+docker ps -q | xargs docker rm -f	//elimina todos los contenedores
+docker rm -fv $(docker ps -aq)		//elimina todos los contenedores
+docker run -d apache-centos		//correr una imagen
+docker run -dti --name centos centos	// corre contenedor -dti para que funcione centos
+docker run -d --name apache apache-centos:apache-cmd		// corre una imagen y asigna un nombre con un tag especifico
+docker run -d --name apache -p 90:80 apache-centos:apache-cmd	// corre con puerto web -p 90:80 (90 es nuestro servidor 80 el servidor de docker)
+docker rm -fv objective_yonath		//elimina contenedores corriendo
+docker run -d -p 90:8080 jenkins/jenkins 			// corre imagen de jenkis 90 para nuestra maquina 8080 para jenkins desde docker
+docker run -dti -e "prueba1=4321" --name evn evn		// corre contenedor con una variable de entorno
+docker run --rm -ti --name centos centos bash			// se autodestruye el contenedor
+docker rename reverent_hawking jenkins		//Cambiar el nombre de un contenedor
+docker stop jenkins			//detiene el contenedor por el nombre
+docker stop 775690de19ac		//detiene el contenedor por el id
+docker start jenkins			//inicia contenedor con el nombre
+docker start 775690de19ac		//inicia contenedor con el id
+docker restart jenkins			//inicia contenedor con el nombre
+docker restart 775690de19ac		//inicia contenedor con el id
+docker stats my-mongo			// cuanto gasta en ram y cpu un contenedor
+docker run -d -m "500mb" --name mongo mongo	//limitando memoria
+docker run -d -m "1gb" --cpuset-cpus 0-1 --name mongo3 mongo
+
+docker exec -ti jenkins bash		//abre una termina en docker 
+docker exec -u root -ti jenkins bash	//abre terminal como usuario root
+docker run --rm -ti centos bash		//ejecuta contenedor con terminal
+
+** BASE DE DATOS **
+docker run --name medicinauniversal -e MYSQL_ROOT_PASSWORD=secret -d mysql:5.7		// medicinauniversal nombre del contenedor, secret contraseña del mysql y el 5.7 la versión del mysql
+docker logs -f medicinauniversal							// subir servicio de mysql
+docker inspect medicinauniversal							// ver la información del contenedor, en este caso la ip
+mysql -u root -h 172.17.0.4 -psecret							// conecta a mysql desde la terminal de tu compu
+docker run -d -p 3333:3306 --name my-db2 -e "MYSQL_ROOT_PASSWORD=secret" -e "MYSQL_DATABASE=docker" -e "MYSQL_USER=drawde" -e "MYSQL_PASSWORD=secret" mysql:5.7 //entornos de variables, base de datos, usuario y contraseña y el prueto
+mysql -u root -psecret -h 127.0.0.1 --port 3333						//entrar desde maquina local a mysql de docker
+mysqldump -u root -h 127.0.0.1 -psecret --port 3333 sys > dump.sql 
+
+Mongo y postgres
+docker run -d --name my-mongo -p 27017:27017 mongo
+docker run -d --name postgres -e POSTGRES_PASSWORD=secret -e POSTGRES_USER=drawde -e POSTGRES_DB -p 5432:5432 postgres
+
+** Copiar archivos **
+docker cp index.html apache:/tmp	
+docker cp index.html apache:/usr/local/apache2/htdocs/index.html	// copia archivos de maquina a docker
+docker cp apache:/var/log/dpkg.log .					// copia archivos de docker a maquina local
+
+** commit - crear imagenes **
+docker commit centos centos-resultante			// crear una imagen de un contenedor
+docker run -dti --name centos centos-resultante /bin/bash
+docker exec -ti centos bash
+
+
+** CAMBIAR DIRECTORIO DE DOCKER **
+docker info | grep -i root 		// directorio root de docker
+vi /lib/systemd/system/docker.service	// archivo para modificar el root de docker
+ExectStart=/usr/bin/dockerd --data-root /opt   //se modifica el archivo docker.service y se agrega el --data-root para cambiar el directorio
+systemctl daemon-reload			// relea el cambio que acabamos de hacer
+
+
+** VOLUMENES **
+docker run -d -p 3333:3306 --name db -e "MYSQL_ROOT_PASSWORD=secret" -e "MYSQL_DATABASE=medicina" -v /opt/mysql:/var/lib/mysql mysql:5.7  	// Se guarda la info de mysql en /opt/mysq de la maquina local
+docker volume ls		// listar volumenes
+docker volume rm $(docker volume ls -q)		//eliminar volumenes
+docker volume create mysql-data			// Crear un volumen con nombre
+docker volume rm mysql-data			// eliminar volumen
+docker run -d -p 3333:3306 --name db -e "MYSQL_ROOT_PASSWORD=secret" -e "MYSQL_DATABASE=medicina" -v mysql-data:/var/lib/mysql mysql:5.7	// con volumen creado
+docker volume ls -f dangling=true		// listado de volumenes que no estan referenciados, que no estan siendo utilizados
+docker volume ls -f dangling=true -q | xargs docker volume rm		// Elimina todos los volumenes no referenciados
+
+docker run -d -p 27017:27017 -v /opt/mongo/:/data/db mongo
+docker run -d --name jenkins -p 8080:8080 -v /opt/jenkins/:/var/jenkins_home jenkins/jenkins
+docker exec jenkins bash -c "cat /var/jenkins_home/secrets/initialAdminPassword"  //ejecuta un comando de bash si necesidad de entrar
+
+
+** NETWORKS **
+bridge				// Driver por defecto que trae docker
+ip a | grep docker		// Listado de la red que crea docker
+ip a | grep wl
+docker network ls		// Lista las redes de docker
+docker network ls | grep bridge	// Lista bridge la default de docker
+docker network inspect bridge	// inspecciona la red
+docker exec focused_kilby bash -c "ping 172.17.0.3"	// ejecuta un ping desde otro contenedor
+docker exec cont2 bash -c "ping cont1" // ping al contenedor 1
+docker network create test-network	// Crear un network
+docker network create -d bridge --subnet 182.17.0.10/16 --gateway 182.17.0.1 docker-test-network	//crea una nueva red
+docker network create --subnet 172.128.10.0/24 --gateway 172.128.10.1 -d bridge my-net
+docker network connect docker-test-network cont3		// conectar a una distinta red, el contenedor cont3 esta en la red test1
+docker network disconnect docker-test-network cont3		// desconectar redes 
+docker network rm docker-test-network				// eliminar red
+docker run --network my-net -d --name ngnx1 centos
+docker run --network my-net --ip 172.128.10.50 -dti --name nginx2 centos	// definir una ip a un contenedor, pero debe estar creada la red
+docker run --network host -dti --name test2 centos		// asigna red local
+docker run --network none --name hola -dti cento		// contenedor sin red, none
+docker run -d -p 127.0.0.1:8081:80 nginx
+
+** DOCKER COMPOSE **
+docker-compose up -d			//ejecuta archivo .yml
+docker-compose down			//eliminar el contenedor
+docker-compose -f docker-compose.yml up -d	// ejecuta un archivo llamado distinto
+docker-compose build			//construye una imagen propia Dockerfile
+watch -d docker ps
+docker-compose -p webtest -f docker-compose.yml up -d	// -p nombre del proyecto
+docker-compose logs -f
+
+
+** Certificado ssh **
+
+onpenssl req req -x509 -nodes - days 365 -newkey rsa:2048 -keyout docker.key -out docker.crt
